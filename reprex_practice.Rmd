@@ -47,7 +47,7 @@ mack_creek_lengths <- mack_creek_vertebrates %>%
 
 ### reprex 2
 
-Identify what is causing the problem in the code below. Identify what is causing the problem in the code below (there's only one thing). Then, create a very simple reprex that would help yourself, future you, or a colleague fix the problem. **Post your reprex as an issue in your own fork on GitHub.**
+Identify what is causing the problem in the code below (there's only one thing). Then, create a very simple reprex that would help yourself, future you, or a colleague fix the problem. **Post your reprex as an issue in your own fork on GitHub.**
 
 ```{r}
 # Example 2:
