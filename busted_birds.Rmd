@@ -1,0 +1,139 @@
+---
+title: "Busted birds"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Your job is to fix all errors in the code below to make a fully functioning script that can be run straight through with "Run all" without problems. 
+
+**MAKE A COPY** of this filed called 'fixed_birds.Rmd' that you'll work in. That way you have the original version in case you really bork something and want to get revert. 
+
+Before each code chunk, you're given a description of what is supposed to happen in each code chunk so you don't go too astray. **You should LOOK AT THE OUTPUT of each line after you've corrected any errors to ensure that it's working as expected, and to confirm you understand what the code is doing.** 
+
+No error expected in this code chunk:
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(skimr)
+library(tidytext)
+```
+
+## Read in the data
+
+The code below should read in four files, all from the data package "Ecological and social Interactions in urban parks: bird surveys in local parks in the central Arizona-Phoenix metropolitan area." Learn more, and see metadata, [here](https://portal.edirepository.org/nis/mapbrowse?packageid=knb-lter-cap.256.9).
+
+The code will store each file as an object with the file prefix. 
+
+**Data source:** Warren, P.S., A. Kinzig, C.A. Martin, and L. Machabee. 2013. Ecological and social Interactions in urban parks: bird surveys in local parks in the central Arizona-Phoenix metropolitan area ver 9. Environmental Data Initiative. https://doi.org/10.6073/pasta/bff8e94e254c9317fa42c86f413a46ce
+
+The code below reads in and assigns multiple CSV files:
+```{r, include = FALSE}
+
+# Create a list of file names you want to read in
+knb_files <- list.files(here("knb-lter-cap_256_9"), pattern = "*.csv")
+
+# Loop over the files, reading in and creating a stored object with 'assign()'. See ?assign for more information.
+# stringr::str_remove() simplifies the file names
+# by removing both the 55_pp52_ and the .csv that start / end all file names
+# See ?assign for more information
+
+for (i in seq_along(knb_files)) {
+  assign(knb_files[i] %>% 
+           str_remove("52_pp52_") %>% 
+           str_remove(".csv"), 
+         read_csv(here("knb-lter-cap_256_9", 
+                       knb_files[i])))
+}
+
+```
+
+## Initial exploration
+
+Basic exploration of the bird observation dataset. There is only one error in the code chunk below (i.e., not all individual lines have an error). 
+```{r, include = FALSE}
+# Return the dimensions 
+dim(birds_1)
+
+# Return the names of birds_1
+names(birds_1)
+
+# Overview
+skim(birds_1)
+
+# See the different species (species_id)
+unique(birds_1 %>% species_id)
+
+# Check out the taxa information
+head(taxalist_1)
+```
+
+## Data wrangling
+
+The code below should join the information in `taxalist_1` to the `birds_1` data frame, by the `species_id` key. 
+
+```{r, include = FALSE}
+birds_df <- birds_1 %>% 
+  left_join(taxalist_1, by = "species")
+```
+
+## Find total counts by park and plot top 15
+
+The code below joins the site information to `birds_df`, then groups by and `park_name`, then finds the sum of the `bird_count` column. The top 15 values are retained, and the park_name converted to an ordered factor by total count. 
+
+```{r}
+bird_totals_by_park <- birds_df %>% 
+  left_join(sites_1) %>% 
+  groupby(park_name) %>% 
+  summarize(total_count = sum(bird_count, na.rm = TRUE)) %>% 
+  slice_max(total_count, n = 15) %>% 
+  mutate(park_name = fct_reorder(park_name, total_count))
+```
+
+This code creates a plot of the top 15 parks by total bird count. 
+```{r}
+ggplot(data = bird_totals_by_park, aes(x = total_count, y = park_name)) +
+  geom_col() +
+  labs(x = "Total bird count",
+       y = "Park name") %>%
+  theme_minimal()
+```
+
+
+## Find top 5 bird species by park, and make a graph
+
+The code below joins the site information to the bird count data, then finds the top five most observed birds (by frequency) at each park. 
+
+```{r}
+common_birds <- birds_df %>% 
+  semi_join(sites_1) %>% 
+  group_by(park_name, common_name) %>% 
+  summarize(total_count = sum(bird_count, na.rm = TRUE)) %>% 
+  slice_max(total_count, n = 5)
+```
+
+The code below should limit the observations to the following parks: Cholla Cove, Desert Willow, Nueve, Orme, Palomino, and Sonrisa. Check output, for example using `unique()` to confirm.
+
+```{r}
+selected_parks <- common_birds %>% 
+  filter(park_name %in% c("Cholla Cove", "Desert Willow", "Nueve", "Orme", "Palamino", "Sonrisa"))
+```
+
+The code below creates a faceted ggplot graph with the top 5 most frequently observed birds at each location. 
+
+```{r}
+ggplot(data = selected_parks, y = common_name, x = total_count) +
+  geom_col() +
+  scale_x_continuous(limits = c(0, 3000)) +
+  facet_wrap(~park_name, scales = "free_y") +
+  theme_linedraw() +
+  labs(x = "\nTotal bird counts", y = "Common name")
+```
+
+The code below exports the graph as a .jpg and saves in the project root.
+```{r}
+ggsave(here("bird_counts.jpg"), heigth = 6, width = 12)
+```
+

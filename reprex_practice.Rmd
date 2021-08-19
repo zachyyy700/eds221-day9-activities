@@ -1,0 +1,64 @@
+---
+title: "reprex"
+author: "Allison Horst"
+date: "8/19/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+```
+
+Your job is to identify an error, then make a reproducible example that would help future you or someone else understand how to write the code correctly. In other words, your reprex code will *work* and offer a solution to the error thrown in each of the following examples. 
+
+Data are in `AS00601.csv` (and read in correctly below as `mack_creek_vertebrates`). 
+
+Data package title: Aquatic Vertebrate Population Study in Mack Creek, Andrews Experimental Forest, 1987 to present
+
+**Citation:** Gregory, S.V. and I. Arismendi. 2020. Aquatic Vertebrate Population Study in Mack Creek, Andrews Experimental Forest, 1987 to present ver 14. Environmental Data Initiative. https://doi.org/10.6073/pasta/7c78d662e847cdbe33584add8f809165
+
+### Read in the data 
+
+There are no problems here. 
+```{r}
+mack_creek_vertebrates <- read_csv(here("AS00601.csv"))
+```
+
+### reprex 1
+
+Identify what is causing the problem in the code below (there's only one thing). Then, create a very simple reprex that would help yourself, future you, or a colleague fix the problem. **Post your reprex as an issue in your own fork on GitHub.**
+
+```{r}
+# Example 1: 
+mack_creek_lengths <- mack_creek_vertebrates %>% 
+  clean_names() %>% 
+  select(year:sampledate) %>% 
+  filter(section == "CC") %>% 
+  mutate(across(where(is.character, tolower))) %>% 
+  drop_na(species) %>% 
+  group_by(species) %>% 
+  summarize(mean_length_cm = mean(length1, na.rm = TRUE),
+            sd_length_cm = sd(length1, na.rm = TRUE)) %>% 
+  ungroup()
+```
+
+### reprex 2
+
+Identify what is causing the problem in the code below. Identify what is causing the problem in the code below (there's only one thing). Then, create a very simple reprex that would help yourself, future you, or a colleague fix the problem. **Post your reprex as an issue in your own fork on GitHub.**
+
+```{r}
+# Example 2:
+mack_creek_vertebrates %>% 
+  clean_names() %>% 
+  filter(species == "ONCL") %>% 
+  ggplot(aes(x = length1, y = weight)) +
+         geom_point(aes(shape = 12), color = "purple") +
+         theme_minimal() +
+         labs(x = "Cutthroat trout length (cm)",
+              y = "Weight (g)")
+```
+
+## End
