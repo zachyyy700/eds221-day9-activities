@@ -37,12 +37,42 @@ mack_creek_lengths <- mack_creek_vertebrates %>%
   clean_names() %>% 
   select(year:sampledate) %>% 
   filter(section == "CC") %>% 
-  mutate(across(where(is.character, tolower))) %>% 
+  mutate(across(where(is.character), tolower)) %>% # fixed across()
   drop_na(species) %>% 
   group_by(species) %>% 
   summarize(mean_length_cm = mean(length1, na.rm = TRUE),
             sd_length_cm = sd(length1, na.rm = TRUE)) %>% 
   ungroup()
+```
+
+```{r}
+# reprex 1 of working code
+mcv_example <- mack_creek_vertebrates |> 
+  clean_names() |> 
+  select(year, section, length1, species) |> 
+  slice_head(n = 5)
+
+datapasta::df_paste(mcv_example)
+
+
+########
+pacman::p_load("tidyverse")
+
+mcv_example <- data.frame(
+  stringsAsFactors = FALSE,
+              year = c(1987, 1987, 1987, 1987, 1987),
+           length1 = c(58, 61, 89, 58, 93),
+           species = c("ONCL", "ONCL", "ONCL", "ONCL", "ONCL")
+        )
+
+mcv_solution <- mcv_example %>% 
+  mutate(across(where(is.character), tolower)) %>% # fix across(): tolower is an arguement of across, not where()
+  drop_na(species) %>% 
+  group_by(species) %>% 
+  summarize(mean_length_cm = mean(length1, na.rm = TRUE),
+            sd_length_cm = sd(length1, na.rm = TRUE)) %>% 
+  ungroup()
+
 ```
 
 ### reprex 2
@@ -55,10 +85,32 @@ mack_creek_vertebrates %>%
   clean_names() %>% 
   filter(species == "ONCL") %>% 
   ggplot(aes(x = length1, y = weight)) +
-         geom_point(aes(shape = 12), color = "purple") +
+         geom_point(shape = 12, color = "purple") + # fixed geom_point(): aes() not needed
          theme_minimal() +
          labs(x = "Cutthroat trout length (cm)",
               y = "Weight (g)")
+```
+
+```{r}
+# reprex 2 of working code
+mcv_example <- mack_creek_vertebrates |> 
+  clean_names() |> 
+  select(length1, species, weight) |> 
+  slice_head(n = 5)
+
+datapasta::df_paste(mcv_example)
+
+#######
+pacman::p_load("tidyverse")
+mcv_example <- data.frame(
+  stringsAsFactors = FALSE,
+           length1 = c(58, 61, 89, 58, 93),
+           species = c("ONCL", "ONCL", "ONCL", "ONCL", "ONCL"),
+            weight = c(1.75, 1.95, 5.6, 2.15, 6.9)
+   )
+mcv_example |> 
+ggplot(aes(x = length1, y = weight)) +
+         geom_point(shape = 12, color = "purple") # fixed geom_point(): take shape & color out of geom_point(aes())
 ```
 
 ## End
